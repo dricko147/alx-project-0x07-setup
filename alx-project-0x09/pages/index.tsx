@@ -1,51 +1,64 @@
-import Button from '@/components/common/Button'
-import { PageRouteProps } from '@/interface'
-import { useRouter } from 'next/router'
+import ImageCard from "@/components/common/ImageCard";
+import React, { useState } from "react";
 
-import CounterApp from './counter-app'
+const Home: React.FC = () => {
+  const [prompt, setPrompt] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
-export default function Home() {
-  // ['const router = useRouter();']
-  const router = useRouter()
-  const routeToNextPage = ({ pageRoute }: PageRouteProps) => {
-    router.push(pageRoute, undefined, { shallow: false })
-  }
+
+  const handleGenerateImage = async () => {
+    setIsLoading(true);
+    const resp = await fetch('/api/generate-image', {
+      method: 'POST',
+      body: JSON.stringify({
+        prompt
+      }),
+      headers: {
+        'Content-type': 'application/json'
+      }
+    })
+
+
+    if (!resp.ok) {
+      setIsLoading(false)
+      return;
+    }
+
+    const data = await resp.json()
+    setIsLoading(false)
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center text-center">
-      {/* Welcome Message */}
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">
-        Welcome to Splash App!
-      </h1>
-      <p className="text-lg text-gray-600 mb-8">
-        Your one-stop platform for everything AI you need. Start exploring by
-        navigating to our features below.
-      </p>
-     {/* Render the CounterApp component */}
-    <CounterApp />
+    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4">
+      <div className="flex flex-col items-center">
+        <h1 className="text-4xl font-bold mb-2">Image Generation App</h1>
+        <p className="text-lg text-gray-700 mb-4">
+          Generate stunning images based on your prompts!
+        </p>
 
-      {/* Navigation Options */}
-      <div className="flex gap-6">
-        <Button
-          action={() => routeToNextPage({ pageRoute: '/generate-text-ai' })}
-          buttonLabel="Generate Text"
-          buttonBackgroundColor="blue"
-        />
-        <Button
-          action={() => routeToNextPage({ pageRoute: '/text-to-image' })}
-          buttonLabel="Text to Image"
-          buttonBackgroundColor="green"
-        />
-        <Button
-          action={() => routeToNextPage({ pageRoute: '/counter-app' })}
-          buttonLabel="Contact us"
-          buttonBackgroundColor="orange"
-        />
+        <div className="w-full max-w-md">
+          <input
+            type="text"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Enter your prompt here..."
+            className="w-full p-3 border border-gray-300 rounded-lg mb-4"
+          />
+          <button
+            onClick={handleGenerateImage}
+            className="w-full p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+          >
+            {
+              isLoading ? "Loading..." : "Generate Image"
+            }
+          </button>
+        </div>
+
+        {imageUrl && <ImageCard action={() => setImageUrl(imageUrl)} imageUrl={imageUrl} prompt={prompt} />}
       </div>
-      </div>
-      //Commented it out for my code to work,haha!
-    //   <div>
-    //           Today is the last Sunday that Rev. Michael Tsalwa preached in our church.
-    //   </div>
-  )
-}
+    </div>
+  );
+};
+
+export default Home;
